@@ -12,7 +12,7 @@ primary development source. Stable releases are periodically synced to
 3. Run the validation workflow locally:
 
    ```sh
-   python3 .github/workflows/validate.py
+   python3 tools/validate.py
    ```
 
 4. Open a pull request describing the motivation and behavior change.
