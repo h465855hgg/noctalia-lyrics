@@ -44,11 +44,23 @@ Install these commands on `PATH`:
 
 Your media player must expose MPRIS metadata for automatic track detection.
 
+To check or install the runtime packages automatically, run:
+
+```sh
+sh scripts/setup-deps.sh --check
+sh scripts/setup-deps.sh
+```
+
+Use `--yes` for unattended installs. The script supports `apt`, `dnf`,
+`pacman`, `zypper`, `apk`, and `xbps-install`. It installs only system runtime
+packages; it does not modify Noctalia settings.
+
 ## Installation
 
 After the plugin is accepted into the Noctalia community catalog, enable
 `h465855hgg/lyrics` from Noctalia's plugin settings and add the `lyrics` widget
-to your bar.
+to your bar. The catalog installs the plugin files; system packages are still
+installed by your distribution package manager or by `scripts/setup-deps.sh`.
 
 For development or early testing, clone this repository and add the clone as a
 local plugin source in Noctalia. The repository root is the plugin root; it
