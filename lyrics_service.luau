@@ -10,7 +10,10 @@ local coverCache = {}
 local lastTrackKey = ""
 local inFlight = nil
 local coverInFlight = nil
-local krcTmp = (noctalia.pluginDir() or "/tmp") .. "/.krc_cache.tmp"
+local pluginDir = noctalia.pluginDir() or "/tmp"
+local cacheDir = pluginDir .. "/.cache"
+noctalia.mkdirAll(cacheDir)
+local krcTmp = cacheDir .. "/krc.tmp"
 local lyricsSource = noctalia.getConfig("lyrics_source") or "auto"
 local customUrl = noctalia.getConfig("custom_url") or ""
 local customJsonField = noctalia.getConfig("custom_json_field") or "syncedLyrics"
@@ -19,7 +22,7 @@ local currentEmbeddedLyrics = ""
 
 local function coverPathFor(track)
   local safe = (track.artist .. "_" .. track.album .. "_" .. track.title):gsub("[^%w]+", "_")
-  return noctalia.pluginDir() .. "/cover_" .. safe .. ".jpg"
+  return cacheDir .. "/cover_" .. safe .. ".jpg"
 end
 
 local function shellQuote(value)
@@ -198,7 +201,7 @@ local function fetchLyricsNetEase(track, embeddedLyrics)
   end
 
   local query = track.title .. "\n" .. track.artist .. "\n" .. (track.album or "")
-  local qTmp = (noctalia.pluginDir() or "/tmp") .. "/.query_cache.tmp"
+  local qTmp = cacheDir .. "/query.tmp"
   noctalia.writeFile(qTmp, query)
   local dir = noctalia.pluginDir() or "/tmp"
 
