@@ -188,18 +188,20 @@ Full state example:
 | `custom_url` | `string` | empty | HTTP URL template with `{title}`, `{artist}`, `{album}`, and `{duration}` placeholders. |
 | `custom_json_field` | `string` | `syncedLyrics` | Dotted JSON path containing LRC text or a timed `lines` array. |
 | `cue_text` | `string` | `•••••` | Characters shown during intro and interlude gaps. |
+| `cue_font_mode` | `select` | `follow` | Follow Noctalia's interface font or use a custom installed font for intro/interlude characters. |
+| `cue_font_family` | `string` | `sans-serif` | Installed font family used for intro/interlude characters in custom-font mode. |
 | `scroll_mode` | `select` | `auto` | Automatic marquee, forced marquee, or static truncation. |
 | `marquee_speed` | `int` | `30` | Approximate long-line scroll speed in logical pixels per second. |
 | `max_lines` | `int` | `1` | Number of lyric lines shown on a vertical bar, from 1 to 3. |
 | `gradient` | `bool` | `true` | Enable progressive per-character highlighting. |
 | `animation` | `select` | `karaoke` | Line transition mode: karaoke, cascade, wave, fade, or none. |
-| `max_chars` | `int` | `24` | Visible Unicode characters before marquee scrolling starts. |
+| `max_chars` | `int` | `15` | Visible Unicode characters before marquee scrolling starts. |
 | `char_width` | `int` | `9` | Estimated logical-pixel character width for scrolling and layout. |
 | `glyph` | `glyph` | `music` | Fallback icon shown when album artwork is unavailable. |
 | `show_artist` | `bool` | `true` | Include the artist in track-info mode. |
 | `hide_when_paused` | `bool` | `false` | Hide the widget instead of dimming it while paused. |
 | `show_cover` | `bool` | `true` | Show circular album artwork beside the lyrics. |
-| `active_color` | `color` | `primary` | Color for the current and already-sung lyric characters. |
+| `active_color` | `color` | `on_surface` | Color for the current and already-sung lyric characters. |
 | `inactive_color` | `color` | `on_surface_variant` | Color for upcoming lyrics, paused playback, and secondary lines. |
 
 ## Development

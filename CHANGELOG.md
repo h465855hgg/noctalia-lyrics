@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.0
+
+- Add an option for intro/interlude characters to follow the interface font or
+  use a custom installed font family.
+- Change the default active lyric color to `on_surface`.
+- Change the default maximum visible character count to 15.
+
 ## 1.2.0
 
 - Select the active MPRIS player across all available `playerctl` players.
