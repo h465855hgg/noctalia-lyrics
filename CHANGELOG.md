@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0
+
+- Select the active MPRIS player across all available `playerctl` players.
+- Add optional player allowlist and blocklist settings with wildcard matching.
+- Send play/pause commands to the selected player instead of the global default.
+- Prevent stale lyric and artwork requests from replacing the current track.
+
 ## 1.1.0
 
 - Add per-widget active and inactive lyric color controls.

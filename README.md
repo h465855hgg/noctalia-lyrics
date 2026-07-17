@@ -14,7 +14,8 @@ under the plugin ID `h465855hgg/lyrics`.
 ## Features
 
 - Bar widget for the current lyric line and circular album artwork.
-- Headless service that reads the active MPRIS player via `playerctl`.
+- Headless service that selects the active MPRIS player via `playerctl`.
+- Optional allowlist and blocklist for multi-player environments.
 - Per-character karaoke highlighting for dynamic lyrics.
 - Line transition modes: karaoke, cascade, wave, fade, or no animation.
 - Smooth marquee scrolling for long lyric lines, with a pause at each edge.
@@ -78,6 +79,11 @@ Then enable plugin ID `h465855hgg/lyrics`, start the `service` entry, and add th
 
 The background service detects the active MPRIS player, fetches lyrics, caches
 album artwork under `.cache/`, and publishes state to the widget.
+
+When several MPRIS players are available, the service prefers a playing player,
+then a paused player, and keeps the current player when priorities are equal.
+The optional allowlist and blocklist match player names or instances and support
+`*` wildcards.
 
 Left-click the widget to switch between lyric mode and track-info mode.
 Right-click the widget to pause or resume the active player.
@@ -176,6 +182,8 @@ Full state example:
 
 | Setting | Type | Default | Description |
 | --- | --- | --- | --- |
+| `player_allowlist` | `string_list` | empty | Only use matching MPRIS player names or instances; supports `*` wildcards. |
+| `player_blocklist` | `string_list` | empty | Ignore matching MPRIS player names or instances; takes priority over the allowlist. |
 | `lyrics_source` | `select` | `auto` | Select automatic fallback, LRCLIB, public NetEase, MPRIS, custom HTTP, or external IPC. |
 | `custom_url` | `string` | empty | HTTP URL template with `{title}`, `{artist}`, `{album}`, and `{duration}` placeholders. |
 | `custom_json_field` | `string` | `syncedLyrics` | Dotted JSON path containing LRC text or a timed `lines` array. |
