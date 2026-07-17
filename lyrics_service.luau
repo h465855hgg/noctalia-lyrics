@@ -85,19 +85,18 @@ local function fetchLyricsNetEase(track, embeddedLyrics)
 
   local function tryFetch(query, fallback)
     local searchUrl = "https://music.163.com/api/search/get?type=1&s=" .. noctalia.string.urlEncode(query) .. "&limit=5"
-    local cmd = 'curl -s --max-time 10 --connect-timeout 5 "' .. searchUrl .. '" -H "Referer: https://music.163.com"'
 
-    noctalia.runAsync(cmd, function(r1)
+    noctalia.http({ url = searchUrl, headers = { "Referer: https://music.163.com" } }, function(r1)
       if not inFlight then return end
       if tk ~= lastTrackKey then inFlight = nil; return end
 
-      if r1.exitCode ~= 0 or not r1.stdout or #r1.stdout == 0 then
+      if not r1.ok or r1.status < 200 or r1.status >= 300 or not r1.body or #r1.body == 0 then
         if fallback then fallback()
         else inFlight = nil; noctalia.state.set("lyrics", nil) end
         return
       end
 
-      local data = noctalia.json.decode(r1.stdout)
+      local data = noctalia.json.decode(r1.body)
       if not data or not data.result or not data.result.songs or #data.result.songs == 0 then
         if fallback then fallback()
         else inFlight = nil; noctalia.state.set("lyrics", nil) end
@@ -123,17 +122,21 @@ local function fetchLyricsNetEase(track, embeddedLyrics)
         bestMatch = data.result.songs[1]
       end
 
-      local songId = bestMatch.id
-      local lyricUrl = "https://music.163.com/api/song/lyric?id=" .. songId .. "&lv=1&kv=1&tv=-1"
-      local lCmd = 'curl -s --max-time 10 --connect-timeout 5 "' .. lyricUrl .. '" -H "Referer: https://music.163.com"'
+      local songId = tostring(bestMatch.id or "")
+      if not songId:match("^%d+$") then
+        if fallback then fallback()
+        else inFlight = nil; noctalia.state.set("lyrics", nil) end
+        return
+      end
+      local lyricUrl = "https://music.163.com/api/song/lyric?id=" .. noctalia.string.urlEncode(songId) .. "&lv=1&kv=1&tv=-1"
 
-      noctalia.runAsync(lCmd, function(r2)
+      noctalia.http({ url = lyricUrl, headers = { "Referer: https://music.163.com" } }, function(r2)
         if not inFlight then return end
         if tk ~= lastTrackKey then inFlight = nil; return end
 
     local lyrics = nil
-    if r2.exitCode == 0 and r2.stdout and #r2.stdout > 0 then
-      local ldata = noctalia.json.decode(r2.stdout)
+    if r2.ok and r2.status >= 200 and r2.status < 300 and r2.body and #r2.body > 0 then
+      local ldata = noctalia.json.decode(r2.body)
       local klyricStr = ""
       if ldata and ldata.klyric then
         local k = ldata.klyric

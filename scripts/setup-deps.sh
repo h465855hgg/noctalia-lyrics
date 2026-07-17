@@ -45,11 +45,10 @@ need_command() {
 MISSING_COMMANDS=""
 need_command playerctl
 need_command python3
-need_command curl
 need_command cp
 
 if [ -z "$MISSING_COMMANDS" ]; then
-  echo "All runtime commands are installed: playerctl python3 curl cp"
+  echo "All runtime commands are installed: playerctl python3 cp"
   exit 0
 fi
 
@@ -90,28 +89,28 @@ PM="$(detect_pm)"
 
 case "$PM" in
   apt)
-    INSTALL_CMD="$SUDO apt-get update && $SUDO apt-get install -y playerctl python3 curl coreutils"
+    INSTALL_CMD="$SUDO apt-get update && $SUDO apt-get install -y playerctl python3 coreutils"
     ;;
   dnf)
-    INSTALL_CMD="$SUDO dnf install -y playerctl python3 curl coreutils"
+    INSTALL_CMD="$SUDO dnf install -y playerctl python3 coreutils"
     ;;
   pacman)
-    INSTALL_CMD="$SUDO pacman -S --needed playerctl python curl coreutils"
+    INSTALL_CMD="$SUDO pacman -S --needed playerctl python coreutils"
     ;;
   zypper)
-    INSTALL_CMD="$SUDO zypper install -y playerctl python3 curl coreutils"
+    INSTALL_CMD="$SUDO zypper install -y playerctl python3 coreutils"
     ;;
   apk)
-    INSTALL_CMD="$SUDO apk add playerctl python3 curl coreutils"
+    INSTALL_CMD="$SUDO apk add playerctl python3 coreutils"
     ;;
   xbps)
-    INSTALL_CMD="$SUDO xbps-install -Sy playerctl python3 curl coreutils"
+    INSTALL_CMD="$SUDO xbps-install -Sy playerctl python3 coreutils"
     ;;
   *)
     cat >&2 <<'EOF'
 Could not detect a supported package manager.
 Install these packages manually with your distribution package manager:
-  playerctl python3 curl coreutils
+  playerctl python3 coreutils
 EOF
     exit 1
     ;;
@@ -138,7 +137,6 @@ sh -c "$INSTALL_CMD"
 MISSING_COMMANDS=""
 need_command playerctl
 need_command python3
-need_command curl
 need_command cp
 
 if [ -n "$MISSING_COMMANDS" ]; then

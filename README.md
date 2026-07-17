@@ -39,8 +39,9 @@ Install these commands on `PATH`:
 
 - `playerctl`: MPRIS metadata, playback position, and play/pause control.
 - `python3`: LRCLIB helper and KRC/dynamic-lyric parser.
-- `curl`: public NetEase API requests.
 - `cp`: preserves temporary local album-art files in the plugin cache.
+
+Public NetEase requests use Noctalia's HTTP API.
 
 Your media player must expose MPRIS metadata for automatic track detection.
 
