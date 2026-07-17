@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.0
+
+- Add per-widget active and inactive lyric color controls.
+- Keep theme-aware semantic colors as defaults while allowing custom colors.
+
 ## 1.0.0
 
 - Initial public release.

@@ -8,6 +8,8 @@ local showArtist = noctalia.getConfig("show_artist")
 local hideWhenPaused = noctalia.getConfig("hide_when_paused")
 local showCover = noctalia.getConfig("show_cover")
 if showCover == nil then showCover = true end
+local activeColor = noctalia.getConfig("active_color") or "primary"
+local inactiveColor = noctalia.getConfig("inactive_color") or "on_surface_variant"
 
 -- These are plugin settings, not per-widget settings.
 local scrollMode = noctalia.getConfig("scroll_mode") or "auto"
@@ -189,9 +191,9 @@ local function getMarqueeOffset(length)
 end
 
 local function karaokeColor(charTime, charProgress, position, useGradient)
-  if not playing then return "on_surface_variant" end
-  local active = noctalia.isDarkMode() and "primary" or "on_surface"
-  local inactive = "on_surface_variant"
+  if not playing then return inactiveColor end
+  local active = activeColor
+  local inactive = inactiveColor
   if charTime and position then
     if not useGradient then
       return position >= charTime and active or inactive
@@ -230,8 +232,8 @@ local function buildLineRow(line, opts)
   local labels = {}
 
   for sourceIndex = first, last do
-    local active = playing and (noctalia.isDarkMode() and "primary" or "on_surface") or "on_surface_variant"
-    local color = opts.dim and "on_surface_variant" or active
+    local active = playing and activeColor or inactiveColor
+    local color = opts.dim and inactiveColor or active
     if not opts.solid and not opts.dim then
       local progress = #chars > 1 and (sourceIndex - 1) / (#chars - 1) or 0
       color = karaokeColor(times and times[sourceIndex], progress, opts.position, opts.useGradient)
@@ -316,7 +318,7 @@ local function render()
     prefix[#prefix + 1] = ui.glyph({
       name = glyph,
       size = 14,
-      color = playing and (noctalia.isDarkMode() and "primary" or "on_surface") or "on_surface_variant",
+      color = playing and activeColor or inactiveColor,
     })
   end
 

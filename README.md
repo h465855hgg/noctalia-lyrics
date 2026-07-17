@@ -190,6 +190,8 @@ Full state example:
 | `show_artist` | `bool` | `true` | Include the artist in track-info mode. |
 | `hide_when_paused` | `bool` | `false` | Hide the widget instead of dimming it while paused. |
 | `show_cover` | `bool` | `true` | Show circular album artwork beside the lyrics. |
+| `active_color` | `color` | `primary` | Color for the current and already-sung lyric characters. |
+| `inactive_color` | `color` | `on_surface_variant` | Color for upcoming lyrics, paused playback, and secondary lines. |
 
 ## Development
 

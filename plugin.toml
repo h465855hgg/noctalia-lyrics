@@ -1,6 +1,6 @@
 id = "h465855hgg/lyrics"
 name = "Lyrics"
-version = "1.0.0"
+version = "1.1.0"
 plugin_api = 3
 author = "h465855hgg"
 license = "MIT"
@@ -150,3 +150,17 @@ entry = "lyrics.luau"
   label_key = "settings.show_cover.label"
   description_key = "settings.show_cover.description"
   default = true
+
+  [[widget.setting]]
+  key = "active_color"
+  type = "color"
+  label_key = "settings.active_color.label"
+  description_key = "settings.active_color.description"
+  default = "primary"
+
+  [[widget.setting]]
+  key = "inactive_color"
+  type = "color"
+  label_key = "settings.inactive_color.label"
+  description_key = "settings.inactive_color.description"
+  default = "on_surface_variant"

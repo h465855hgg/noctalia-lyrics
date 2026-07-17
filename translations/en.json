@@ -17,6 +17,14 @@
       "label": "Show album cover",
       "description": "Display the song's album art next to the lyrics."
     },
+    "active_color": {
+      "label": "Active lyric color",
+      "description": "Color used for the current and already-sung lyric characters."
+    },
+    "inactive_color": {
+      "label": "Inactive lyric color",
+      "description": "Color used for upcoming lyrics, paused playback, and secondary lines."
+    },
     "lyrics_source": {
       "label": "Lyrics source",
       "description": "Choose a preset source, local-player lyrics, a custom endpoint, or external push protocol.",
