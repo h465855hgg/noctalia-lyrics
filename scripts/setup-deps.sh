@@ -46,9 +46,10 @@ MISSING_COMMANDS=""
 need_command playerctl
 need_command python3
 need_command cp
+need_command chmod
 
 if [ -z "$MISSING_COMMANDS" ]; then
-  echo "All runtime commands are installed: playerctl python3 cp"
+  echo "All runtime commands are installed: playerctl python3 cp chmod"
   exit 0
 fi
 
@@ -138,6 +139,7 @@ MISSING_COMMANDS=""
 need_command playerctl
 need_command python3
 need_command cp
+need_command chmod
 
 if [ -n "$MISSING_COMMANDS" ]; then
   echo "Still missing after installation:$MISSING_COMMANDS" >&2
