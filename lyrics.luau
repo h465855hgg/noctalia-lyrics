@@ -166,7 +166,7 @@ local function getLineInfo()
     or (startTime + 4000)
   local lineEnd = nextTime
 
-  if line.duration and line.duration > 0 then
+  if line.duration and line.duration > 0 and line.duration_inferred ~= true then
     lineEnd = math.min(nextTime, startTime + line.duration)
   elseif nextTime - startTime >= INTERLUDE_GAP_MS then
     -- LRC only marks line starts. Do not stretch a lyric across a long instrumental gap.
@@ -294,8 +294,9 @@ local function secondaryText(line)
   return translation ~= "" and translation or romanization
 end
 
-local function secondaryRowEnabled()
+local function secondaryRowEnabled(text)
   return doubleLine and (showTranslation or showRomanization)
+    and type(text) == "string" and text:match("%S") ~= nil
 end
 
 local function compactMetrics(hasSecondary, vertical)
@@ -457,8 +458,8 @@ local function render()
     if info then
       local shownLine, opacity = currentTransitionLine(info)
       if shownLine then
-        local showSecondaryRow = secondaryRowEnabled() and not shownLine.cue and not info.cue
-        local secondary = showSecondaryRow and secondaryText(shownLine) or ""
+        local secondary = secondaryText(shownLine)
+        local showSecondaryRow = secondaryRowEnabled(secondary) and not shownLine.cue and not info.cue
         local fontScale, effectiveLineGap = compactMetrics(showSecondaryRow, vertical)
         lineNodes[#lineNodes + 1] = buildLineRow(shownLine, {
           key = "current-" .. tostring(info.index),

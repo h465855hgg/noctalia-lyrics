@@ -81,6 +81,8 @@ def finalize(lines, total_duration=0):
             item.get("romanization", item.get("romanized", item.get("romaji", ""))),
             item.get("chars", item.get("charTimes", [])),
         )
+        if item.get("duration_inferred") is True:
+            normalized["duration_inferred"] = True
         if normalized["text"] or normalized["translation"] or normalized["romanization"]:
             cleaned.append(normalized)
     cleaned.sort(key=lambda item: (item["time"] < 0, item["time"] if item["time"] >= 0 else 0))
@@ -93,6 +95,7 @@ def finalize(lines, total_duration=0):
         )
         if next_time:
             item["duration"] = max(0, next_time - item["time"])
+            item["duration_inferred"] = True
     return cleaned
 
 
