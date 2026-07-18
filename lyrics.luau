@@ -75,7 +75,7 @@ local MARQUEE_HOLD = 1.1
 local BLEND_MS = 350
 local INTERLUDE_GAP_MS = 7000
 local INTRO_MIN_MS = 6000
-local INTERLUDE_MIN_MS = 3000
+local INTERLUDE_MIN_MS = 5000
 
 local function shellQuote(value)
   return "'" .. tostring(value):gsub("'", "'\\''") .. "'"
