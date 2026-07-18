@@ -1,0 +1,173 @@
+{
+  "title": "歌词",
+  "no_lyrics": "暂无可用歌词",
+  "intro": "前奏",
+  "instrumental": "间奏",
+  "source_label": "歌词来源",
+  "settings": {
+    "player_allowlist": {
+      "label": "播放器白名单",
+      "description": "仅使用匹配的 MPRIS 播放器。留空表示允许全部；支持 * 通配符，可匹配播放器名称或实例名。"
+    },
+    "player_blocklist": {
+      "label": "播放器黑名单",
+      "description": "应用白名单后忽略匹配的 MPRIS 播放器。支持 * 通配符，例如 chromium* 或 firefox*。"
+    },
+    "glyph": {
+      "label": "图标"
+    },
+    "show_artist": {
+      "label": "显示歌手"
+    },
+    "hide_when_paused": {
+      "label": "暂停时隐藏"
+    },
+    "show_cover": {
+      "label": "显示专辑封面",
+      "description": "在歌词旁显示当前歌曲的专辑封面。"
+    },
+    "active_color": {
+      "label": "当前歌词颜色",
+      "description": "设置当前歌词和已经唱过字符的颜色，默认使用界面文字颜色。"
+    },
+    "inactive_color": {
+      "label": "未唱歌词颜色",
+      "description": "设置未唱歌词、暂停状态和次要歌词行的颜色。"
+    },
+    "lyrics_source": {
+      "label": "歌词来源",
+      "description": "选择预设词源、本地播放器歌词、自定义接口或外部推送协议。",
+      "options": {
+        "auto": "自动回退",
+        "lrclib": "LRCLIB",
+        "netease": "网易云音乐",
+        "qqmusic": "QQ 音乐",
+        "kugou": "酷狗音乐",
+        "qishui": "汽水音乐",
+        "apple_music": "Apple Music",
+        "spotify": "Spotify",
+        "musixmatch": "Musixmatch",
+        "mpris": "本地播放器（MPRIS）",
+        "custom": "自定义 HTTP 接口",
+        "external": "外部 IPC 推送"
+      }
+    },
+    "lyrics_sources": { "label": "自动词源顺序", "description": "按从上到下的顺序尝试词源，可填写 lrclib、netease、qqmusic、kugou、qishui、apple_music、spotify、musixmatch、mpris 或 custom。" },
+    "translation_language": {
+      "label": "歌词翻译语言", "description": "词源支持时优先请求的翻译语言。",
+      "options": { "zh-Hans": "简体中文", "zh-Hant": "繁体中文", "en": "英语", "ja": "日语", "ko": "韩语" }
+    },
+    "spotify_sp_dc": { "label": "Spotify sp_dc", "description": "用户手动填写的 Spotify 网页 Cookie。它会以普通插件设置保存，但不会写入日志。" },
+    "spotify_access_token": { "label": "Spotify 访问令牌", "description": "可选的 Spotify access token，优先于 sp_dc。" },
+    "apple_developer_token": { "label": "Apple Music 开发者令牌", "description": "用于 Apple Music 曲库和歌词请求的 developer token。" },
+    "apple_user_token": { "label": "Apple Music 用户令牌", "description": "需要订阅授权的歌词可填写 Music-User-Token。" },
+    "apple_storefront": { "label": "Apple Music 商店区域", "description": "例如 us、cn、jp 或 hk。" },
+    "musixmatch_token": { "label": "Musixmatch 用户令牌", "description": "用于 Musixmatch 桌面字幕接口的 usertoken。" },
+    "qishui_api_url": { "label": "汽水音乐接口 URL", "description": "支持 {title}、{artist}、{album} 的接口模板；汽水公开接口不稳定，因此需要自行填写。" },
+    "qishui_token": { "label": "汽水音乐令牌", "description": "仅发送给自定义汽水接口的可选 Bearer token。" },
+    "custom_url": {
+      "label": "自定义接口 URL",
+      "description": "支持 {title}、{artist}、{album} 和 {duration} 占位符，文本响应可直接返回 LRC。"
+    },
+    "custom_json_field": {
+      "label": "JSON 歌词字段",
+      "description": "JSON 响应中的歌词字段，支持点号路径，例如 data.lyric；留空则按纯 LRC 解析。"
+    },
+    "cue_text": {
+      "label": "前奏/间奏字符",
+      "description": "前奏和间奏期间逐字点亮的文字或字符。"
+    },
+    "cue_font_mode": {
+      "label": "前奏/间奏字体模式",
+      "description": "选择前奏和间奏字符跟随 Noctalia 界面字体，或使用其他已安装字体。",
+      "options": {
+        "follow": "跟随界面字体",
+        "custom": "自定义字体"
+      }
+    },
+    "cue_font_family": {
+      "label": "前奏/间奏字体",
+      "description": "自定义字体模式下，仅用于前奏和间奏字符的已安装字体族名称。"
+    },
+    "lyrics_offset_ms": { "label": "歌词延迟（毫秒）", "description": "正值让歌词更早显示，负值让歌词更晚显示。" },
+    "poll_interval_ms": { "label": "播放器轮询频率（毫秒）", "description": "服务刷新 MPRIS 元数据和播放进度的间隔。" },
+    "display_mode": {
+      "label": "显示模式", "description": "固定显示歌词、固定显示歌曲信息，或允许左键切换。",
+      "options": { "toggle": "点击切换", "lyrics": "仅歌词", "track": "仅歌曲名和歌手" }
+    },
+    "double_line": { "label": "双行歌词", "description": "在原文歌词下方显示翻译或罗马音。" },
+    "double_line_auto_fit": { "label": "双行紧凑模式", "description": "在水平状态栏中缩小主副歌词字号和间距，避免胶囊外框裁剪第二行；垂直状态栏不受影响。" },
+    "double_line_height_budget": { "label": "双行高度预算", "description": "水平状态栏可用于两行文字的近似总高度；数值越小，两行越紧凑。" },
+    "show_translation": { "label": "显示翻译", "description": "允许翻译歌词出现在第二行。" },
+    "show_romanization": { "label": "显示罗马音", "description": "允许罗马音或音译出现在第二行。" },
+    "secondary_line_mode": {
+      "label": "第二行内容", "description": "选择附加歌词内容的优先顺序。",
+      "options": { "translation_first": "翻译优先，其次罗马音", "romanization_first": "罗马音优先，其次翻译", "translation": "仅翻译", "romanization": "仅罗马音" }
+    },
+    "karaoke_enabled": { "label": "卡拉 OK 逐字高亮", "description": "使用词源逐字时间或模拟行进度进行逐字高亮。" },
+    "scroll_mode": {
+      "label": "滚动模式",
+      "description": "设置长歌词在状态栏中的滚动方式。",
+      "options": {
+        "auto": "自动滚动",
+        "marquee": "始终滚动",
+        "static": "静态截断"
+      }
+    },
+    "marquee_speed": {
+      "label": "滚动速度",
+      "description": "长歌词每秒滚动的像素数。"
+    },
+    "max_lines": {
+      "label": "最大行数",
+      "description": "垂直状态栏中同时显示的歌词行数。"
+    },
+    "gradient": {
+      "label": "逐字渐变",
+      "description": "根据播放进度逐字点亮当前歌词。"
+    },
+    "animation": {
+      "label": "歌词动画",
+      "description": "歌词换行时使用的动画。",
+      "options": {
+        "karaoke": "逐字渐变和淡入淡出",
+        "cascade": "字符级联淡入",
+        "wave": "字符波浪显现",
+        "fade": "仅淡入淡出",
+        "typewriter": "打字机显现",
+        "pulse": "脉冲淡入",
+        "blink": "闪烁显现",
+        "none": "无动画"
+      }
+    },
+    "max_chars": {
+      "label": "最大字符数",
+      "description": "长歌词开始滚动前显示的最大字符数。"
+    },
+    "char_width": {
+      "label": "字符宽度（像素）",
+      "description": "用于计算歌词显示窗口和滚动速度的近似字符宽度。"
+    },
+    "font_family": { "label": "歌词字体", "description": "用于所有歌词的已安装字体族；留空跟随 Noctalia。" },
+    "primary_font_size": { "label": "主歌词字号", "description": "原文歌词行的字号，0 表示跟随 Noctalia。" },
+    "font_weight": {
+      "label": "歌词粗细", "description": "主歌词使用的字体粗细。",
+      "options": { "thin": "极细", "light": "细体", "normal": "常规", "medium": "中等", "semibold": "半粗", "bold": "粗体", "heavy": "特粗" }
+    },
+    "secondary_font_size": { "label": "第二行字号", "description": "翻译和罗马音使用的字号。" },
+    "font_style": {
+      "label": "字体布局样式", "description": "Noctalia 渲染器支持的文字基线样式。",
+      "options": { "normal": "普通", "fixed": "固定文字高度", "ink_centered": "字形墨迹居中" }
+    },
+    "line_gap": { "label": "歌词行间距", "description": "原文、翻译、罗马音和上下文歌词之间的间距。" },
+    "padding_left": { "label": "左边距", "description": "组件内容左侧的空白。" },
+    "padding_right": { "label": "右边距", "description": "组件内容右侧的空白。" },
+    "cover_shape": {
+      "label": "封面形状", "description": "专辑封面的形状。",
+      "options": { "circle": "圆形", "rounded": "圆角方形", "square": "方形", "custom": "自定义圆角" }
+    },
+    "cover_radius": { "label": "封面圆角", "description": "自定义封面形状使用的圆角半径。" },
+    "cover_size": { "label": "封面尺寸", "description": "专辑封面的宽度和高度。" },
+    "secondary_color": { "label": "第二行歌词颜色", "description": "翻译和罗马音歌词使用的颜色。" }
+  }
+}

@@ -1,131 +1,154 @@
-# Noctalia Lyrics
+# Noctalia Lyrics 1.4.0
 
-Synchronized lyrics for the Noctalia status bar, with album artwork, karaoke
-highlighting, animated line changes, smooth long-line scrolling, and multiple
-lyric sources.
+Synchronized lyrics for the Noctalia bar, with multiple MPRIS players,
+translation and romanization layers, configurable sources, karaoke highlighting,
+album artwork, and layout controls.
 
-![Lyrics plugin thumbnail](thumbnail.webp)
+## Plugin
 
-This repository is the primary development source for the plugin. Stable
-versions are submitted to
-[noctalia-dev/community-plugins](https://github.com/noctalia-dev/community-plugins)
-under the plugin ID `h465855hgg/lyrics`.
-
-## Features
-
-- Bar widget for the current lyric line and circular album artwork.
-- Headless service that selects the active MPRIS player via `playerctl`.
-- Optional allowlist and blocklist for multi-player environments.
-- Per-character karaoke highlighting for dynamic lyrics.
-- Line transition modes: karaoke, cascade, wave, fade, or no animation.
-- Smooth marquee scrolling for long lyric lines, with a pause at each edge.
-- Configurable intro/interlude cue text such as `•••••`.
-- Track fallback display when synchronized lyrics are unavailable.
-- Right-click pause/resume; paused lyrics dim and animations stop.
-- External IPC protocol for players or scripts that already know the lyrics.
-
-## Screenshots
-
-Status-bar widget:
-
-![Lyrics bar widget](screenshots/widget.webp)
-
-Plugin settings:
-
-![Lyrics settings](screenshots/settings.webp)
+| Field | Value |
+| --- | --- |
+| ID | `h465855hgg/lyrics` |
+| Entries | Bar widget: `lyrics`; service: `service` |
 
 ## Requirements
 
 Install these commands on `PATH`:
 
-- `playerctl`: MPRIS metadata, playback position, and play/pause control.
-- `python3`: LRCLIB helper and KRC/dynamic-lyric parser.
-- `cp`: preserves temporary local album-art files in the plugin cache.
-
-Public NetEase requests use Noctalia's HTTP API.
-
-Your media player must expose MPRIS metadata for automatic track detection.
-
-To check or install the runtime packages automatically, run:
-
-```sh
-sh scripts/setup-deps.sh --check
-sh scripts/setup-deps.sh
-```
-
-Use `--yes` for unattended installs. The script supports `apt`, `dnf`,
-`pacman`, `zypper`, `apk`, and `xbps-install`. It installs only system runtime
-packages; it does not modify Noctalia settings.
-
-## Installation
-
-After the plugin is accepted into the Noctalia community catalog, enable
-`h465855hgg/lyrics` from Noctalia's plugin settings and add the `lyrics` widget
-to your bar. The catalog installs the plugin files; system packages are still
-installed by your distribution package manager or by `scripts/setup-deps.sh`.
-
-For development or early testing, clone this repository and add the clone as a
-local plugin source in Noctalia. The repository root is the plugin root; it
-contains `plugin.toml` directly.
-
-```sh
-git clone https://github.com/h465855hgg/noctalia-lyrics.git
-```
-
-Then enable plugin ID `h465855hgg/lyrics`, start the `service` entry, and add the
-`lyrics` bar widget.
+- `playerctl`: read and control MPRIS players.
+- `python3`: run the unified lyric-source adapter and dynamic lyric parser.
+- `cp`: preserve local MPRIS artwork in the plugin cache.
+- `chmod`: restrict temporary credential request files to the current user.
 
 ## Usage
 
-The background service detects the active MPRIS player, fetches lyrics, caches
-album artwork under `.cache/`, and publishes state to the widget.
+Enable `h465855hgg/lyrics`, start its `service` entry, and add the `lyrics` bar
+widget. Left-click switches between lyrics and track information when
+`display_mode` is `toggle`; right-click pauses or resumes the selected player.
 
-When several MPRIS players are available, the service prefers a playing player,
-then a paused player, and keeps the current player when priorities are equal.
-The optional allowlist and blocklist match player names or instances and support
-`*` wildcards.
+## Screenshots
 
-Left-click the widget to switch between lyric mode and track-info mode.
-Right-click the widget to pause or resume the active player.
+Double-line widget with translated or romanized lyrics:
 
-When synchronized lyrics are unavailable, the widget displays the track title
-and artist. Long lines scroll smoothly. Long intro and instrumental gaps can
-show a configurable cue string.
+![Lyrics 1.4 widget](<screenshots/widget - 1.4.0.png>)
 
-## Lyric Sources
+Custom album-cover corner radius:
 
-The `lyrics_source` setting controls lookup behavior:
+![Lyrics custom cover radius](<screenshots/widget 自定义封面圆角 - 1.4.0.png>)
 
-| Value | Behavior |
-| --- | --- |
-| `auto` | Try LRCLIB first, then the public NetEase Music API. |
-| `lrclib` | Use LRCLIB only. |
-| `netease` | Use the public NetEase Music API only. |
-| `mpris` | Read embedded text lyrics from the active MPRIS player. |
-| `custom` | Request a configured HTTP endpoint. |
-| `external` | Wait for lyrics pushed through Noctalia IPC. |
+Plugin-wide settings:
 
-The plugin does not read browser cookies, player credentials, or private API
-tokens.
+![Lyrics 1.4 settings](<screenshots/settings - 1.4.0.png>)
 
-## Custom HTTP Source
+Per-widget bar settings:
 
-Set `lyrics_source` to `custom`, then configure `custom_url`. The URL supports
-these placeholders, which are URL-encoded before the request is sent:
+![Lyrics 1.4 bar widget settings](<screenshots/bar widget settings - 1.4.0.png>)
 
-- `{title}`
-- `{artist}`
-- `{album}`
-- `{duration}`
+## Local development
 
-The response can be plain LRC text or JSON. For JSON responses, set
-`custom_json_field` to the dotted field path containing the LRC string or a
-timed `lines` array, for example `data.syncedLyrics`.
+Add the parent directory of this checkout as a local Noctalia source:
 
-## External IPC
+```sh
+noctalia msg plugins source add lyrics-dev path /path/to/plugin-parent
+noctalia msg plugins enable h465855hgg/lyrics
+noctalia msg config-reload
+```
 
-Set `lyrics_source` to `external` to let another program push lyrics into the
-plugin service.
+Run validation after every change:
+
+```sh
+python3 tools/validate.py
+noctalia plugins lint .
+python3 -m py_compile lyric_sources.py krc_decode.py lrclib_lyric.py
+```
+
+## Lyrics model
+
+Every source is normalized to lines with independent original, translation,
+romanization, and character-timing fields:
+
+```json
+{
+  "time": 1200,
+  "duration": 1800,
+  "text": "Original lyric",
+  "translation": "Translated lyric",
+  "romanization": "romanized lyric",
+  "chars": [1200, 1500, 1800]
+}
+```
+
+## Sources
+
+`auto` tries the IDs listed in `lyrics_sources` from top to bottom. Supported
+IDs are:
+
+- `lrclib`: public LRCLIB search.
+- `netease`: public NetEase search, synchronized lyrics, translations, and
+  romanization when returned.
+- `qqmusic`: public QQ Music search and lyric endpoint.
+- `kugou`: public Kugou search and lyric download endpoint.
+- `qishui`: user-configured HTTP endpoint supporting `{title}`, `{artist}`, and
+  `{album}` placeholders.
+- `apple_music`: Apple Music catalog and lyrics request using manually supplied
+  developer and optional user tokens.
+- `spotify`: Spotify search and color-lyrics request using a manually supplied
+  access token or `sp_dc`.
+- `musixmatch`: Musixmatch subtitle request using a manually supplied usertoken.
+- `mpris`: embedded `xesam:asText` lyrics from the selected player.
+- `custom`: existing generic HTTP endpoint.
+- `external`: lyrics pushed through Noctalia IPC.
+
+Source APIs can change or reject requests by region or account. Failure of one
+source in automatic mode moves to the next source without logging credentials.
+
+## Credential warning
+
+Noctalia currently exposes these as normal string settings, not secret fields.
+Spotify, Apple Music, Musixmatch, and Qishui credentials may therefore be stored
+in plaintext in Noctalia's settings. The plugin never scans browser cookies,
+never logs credential values, and deletes its temporary credential request file
+as soon as the source adapter reads it.
+
+## Feature test checklist
+
+The normal settings view contains everyday source, lyric-layer, display, font,
+and animation controls. Open Advanced settings for credentials, source order,
+polling, marquee metrics, player filters, and fine padding.
+
+1. Language: change Noctalia's global language and reload the config. Plugin
+   settings and runtime text follow the host language. Noctalia currently
+   supports English and Simplified Chinese from the originally requested locale
+   set; Japanese, Korean, and Traditional Chinese are not host language options.
+   Close and reopen Settings, then disable and enable the plugin if the runtime
+   tooltip still uses the previous language.
+2. Chinese translation: use NetEase/QQ/Musixmatch with `show_translation=true`
+   and `translation_language=zh-Hans`.
+3. Romanization: enable `show_romanization` and select a NetEase/QQ track that
+   returns romanized lyrics.
+4. Sources: select each `lyrics_source` directly, then test custom fallback order
+   through `lyrics_sources`.
+5. Delay: set `lyrics_offset_ms` to `1000` and `-1000`; positive values should
+   show the next lyric one second earlier.
+6. Polling: test `poll_interval_ms` at `100`, `500`, and `2000`.
+7. Cover: test circle, rounded, square, and custom radius; change `cover_size`.
+8. Double line: enable `double_line` and switch `secondary_line_mode`.
+   On horizontal bars keep `double_line_auto_fit` enabled and lower
+   `double_line_height_budget` if the bar clips the second line.
+9. Karaoke: toggle `karaoke_enabled`; line transitions must continue when off.
+10. Hide layers: independently disable `show_translation` and
+    `show_romanization`.
+11. Track-only: select `display_mode=track`; no lyric source request should run.
+12. Font and double-line sizing: test `font_family`, `primary_font_size`,
+    `secondary_font_size`, `line_gap`, `font_weight`, and `font_style`.
+13. Animations: test karaoke, cascade, wave, fade, typewriter, pulse, blink, and
+    none.
+14. Layout: test `padding_left`, `padding_right`, and `line_gap` on horizontal and
+    vertical bars.
+
+## External protocol
+
+Address the singleton service with:
 
 ```sh
 noctalia msg plugin h465855hgg/lyrics:service all <event> '<payload>'
@@ -133,107 +156,10 @@ noctalia msg plugin h465855hgg/lyrics:service all <event> '<payload>'
 
 Supported events:
 
-- `push-lrc`: payload is synchronized or plain LRC text.
-- `push-json`: payload is JSON with a `lines` timed array or a `lyrics` LRC string.
-- `push-state`: payload can also update `track`, `position`, `playing`, and `cover`.
-- `clear`: clears the currently published lyrics.
+- `push-lrc`: synchronized or plain LRC text.
+- `push-json`: JSON with `lines` or `lyrics`.
+- `push-state`: also updates track, position, playing, and cover.
+- `clear`: clears current lyrics.
 
-Line timestamps and per-character timestamps are milliseconds. MPRIS track
-duration and playback position are microseconds.
-
-```json
-{
-  "lines": [
-    {
-      "time": 1200,
-      "duration": 1800,
-      "text": "Hello",
-      "chars": [1200, 1500, 1800, 2100, 2400]
-    }
-  ]
-}
-```
-
-Full state example:
-
-```json
-{
-  "track": {
-    "title": "Song",
-    "artist": "Artist",
-    "album": "Album",
-    "duration": 180000000
-  },
-  "position": 42500000,
-  "playing": true,
-  "cover": "/absolute/path/cover.jpg",
-  "lines": [
-    {
-      "time": 42000,
-      "duration": 2000,
-      "text": "Current lyric",
-      "chars": [42000, 42400, 42800, 43200]
-    }
-  ]
-}
-```
-
-## Settings
-
-| Setting | Type | Default | Description |
-| --- | --- | --- | --- |
-| `player_allowlist` | `string_list` | empty | Only use matching MPRIS player names or instances; supports `*` wildcards. |
-| `player_blocklist` | `string_list` | empty | Ignore matching MPRIS player names or instances; takes priority over the allowlist. |
-| `lyrics_source` | `select` | `auto` | Select automatic fallback, LRCLIB, public NetEase, MPRIS, custom HTTP, or external IPC. |
-| `custom_url` | `string` | empty | HTTP URL template with `{title}`, `{artist}`, `{album}`, and `{duration}` placeholders. |
-| `custom_json_field` | `string` | `syncedLyrics` | Dotted JSON path containing LRC text or a timed `lines` array. |
-| `cue_text` | `string` | `•••••` | Characters shown during intro and interlude gaps. |
-| `cue_font_mode` | `select` | `follow` | Follow Noctalia's interface font or use a custom installed font for intro/interlude characters. |
-| `cue_font_family` | `string` | `sans-serif` | Installed font family used for intro/interlude characters in custom-font mode. |
-| `scroll_mode` | `select` | `auto` | Automatic marquee, forced marquee, or static truncation. |
-| `marquee_speed` | `int` | `30` | Approximate long-line scroll speed in logical pixels per second. |
-| `max_lines` | `int` | `1` | Number of lyric lines shown on a vertical bar, from 1 to 3. |
-| `gradient` | `bool` | `true` | Enable progressive per-character highlighting. |
-| `animation` | `select` | `karaoke` | Line transition mode: karaoke, cascade, wave, fade, or none. |
-| `max_chars` | `int` | `15` | Visible Unicode characters before marquee scrolling starts. |
-| `char_width` | `int` | `9` | Estimated logical-pixel character width for scrolling and layout. |
-| `glyph` | `glyph` | `music` | Fallback icon shown when album artwork is unavailable. |
-| `show_artist` | `bool` | `true` | Include the artist in track-info mode. |
-| `hide_when_paused` | `bool` | `false` | Hide the widget instead of dimming it while paused. |
-| `show_cover` | `bool` | `true` | Show circular album artwork beside the lyrics. |
-| `active_color` | `color` | `on_surface` | Color for the current and already-sung lyric characters. |
-| `inactive_color` | `color` | `on_surface_variant` | Color for upcoming lyrics, paused playback, and secondary lines. |
-
-## Development
-
-Run the local validator before opening a pull request:
-
-```sh
-python3 tools/validate.py
-python3 -m py_compile krc_decode.py lrclib_lyric.py tools/validate.py
-```
-
-Runtime files are intentionally ignored by Git:
-
-- `.cache/`
-- `.query_cache.tmp`
-- `.krc_cache.tmp`
-- `cover_*.jpg`
-- Python bytecode caches
-
-This keeps the repository clean while allowing the plugin to cache album art and
-temporary lyric-query files during normal use.
-
-## Contributing
-
-Pull requests should target this repository first. Keep changes focused, run the
-validator, and do not include credentials, cookies, private API tokens, or large
-runtime cache files.
-
-For community catalog updates, sync stable changes from this repository to
-`noctalia-dev/community-plugins` while keeping the same plugin ID:
-`h465855hgg/lyrics`.
-
-## License
-
-MIT. See [LICENSE](LICENSE).
+MPRIS track duration and playback position are microseconds. Lyric line,
+duration, and character timestamps are milliseconds.

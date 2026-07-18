@@ -8,8 +8,12 @@ local showArtist = noctalia.getConfig("show_artist")
 local hideWhenPaused = noctalia.getConfig("hide_when_paused")
 local showCover = noctalia.getConfig("show_cover")
 if showCover == nil then showCover = true end
+local coverShape = noctalia.getConfig("cover_shape") or "circle"
+local coverRadius = tonumber(noctalia.getConfig("cover_radius")) or 5
+local coverSize = tonumber(noctalia.getConfig("cover_size")) or 18
 local activeColor = noctalia.getConfig("active_color") or "on_surface"
 local inactiveColor = noctalia.getConfig("inactive_color") or "on_surface_variant"
+local secondaryColor = noctalia.getConfig("secondary_color") or "on_surface_variant"
 
 -- These are plugin settings, not per-widget settings.
 local scrollMode = noctalia.getConfig("scroll_mode") or "auto"
@@ -25,14 +29,35 @@ if cueText == "" then cueText = "•••••" end
 local cueFontMode = noctalia.getConfig("cue_font_mode") or "follow"
 local cueFontFamily = noctalia.getConfig("cue_font_family") or "sans-serif"
 if cueFontFamily == "" then cueFontFamily = "sans-serif" end
+local displayMode = noctalia.getConfig("display_mode") or "toggle"
+local doubleLine = noctalia.getConfig("double_line")
+if doubleLine == nil then doubleLine = true end
+local doubleLineAutoFit = noctalia.getConfig("double_line_auto_fit")
+if doubleLineAutoFit == nil then doubleLineAutoFit = true end
+local doubleLineHeightBudget = tonumber(noctalia.getConfig("double_line_height_budget")) or 26
+local showTranslation = noctalia.getConfig("show_translation")
+if showTranslation == nil then showTranslation = true end
+local showRomanization = noctalia.getConfig("show_romanization") == true
+local secondaryLineMode = noctalia.getConfig("secondary_line_mode") or "translation_first"
+local karaokeEnabled = noctalia.getConfig("karaoke_enabled")
+if karaokeEnabled == nil then karaokeEnabled = true end
+local fontFamily = noctalia.getConfig("font_family") or ""
+local primaryFontSize = tonumber(noctalia.getConfig("primary_font_size")) or 0
+local secondaryFontSize = tonumber(noctalia.getConfig("secondary_font_size")) or 10
+local fontWeight = noctalia.getConfig("font_weight") or "normal"
+local fontStyle = noctalia.getConfig("font_style") or "normal"
+local lineGap = tonumber(noctalia.getConfig("line_gap")) or 2
+local paddingLeft = tonumber(noctalia.getConfig("padding_left")) or 0
+local paddingRight = tonumber(noctalia.getConfig("padding_right")) or 0
 
 local track = nil
 local lyrics = nil
 local cover = nil
 local playing = false
-local showMode = "auto"
+local showMode = displayMode == "track" and "track" or "auto"
 local rendered = false
 local playerInstance = ""
+local sourceUsed = ""
 
 local baselinePosition = 0
 local baselineClock = os.clock()
@@ -78,6 +103,23 @@ local function toChars(text)
     i = i + length
   end
   return chars
+end
+
+local function charUnits(char)
+  if char == " " or char == "\t" then return 0.35 end
+  local byte = char:byte(1) or 0
+  if byte < 0x80 then
+    if char:match("[%.,:;!'|ilI%-%(%)]") then return 0.38 end
+    if char:match("[MW@#%%&]") then return 0.85 end
+    return 0.58
+  end
+  return 1
+end
+
+local function textUnits(text)
+  local units = 0
+  for _, char in ipairs(toChars(text or "")) do units = units + charUnits(char) end
+  return units
 end
 
 local function getProgressMs()
@@ -176,11 +218,20 @@ local function getFallbackLabel()
 end
 
 local function shouldMarquee(text)
-  return scrollMode ~= "static" and #toChars(text) > maxChars
+  return scrollMode ~= "static" and textUnits(text) > maxChars
 end
 
-local function getMarqueeOffset(length)
-  local distance = math.max(0, length - maxChars)
+local function getMarqueeOffset(chars)
+  local trailingChars = 0
+  local units = 0
+  for index = #chars, 1, -1 do
+    local char = chars[index]
+    local nextUnits = units + charUnits(char)
+    if nextUnits > maxChars then break end
+    units = nextUnits
+    trailingChars = trailingChars + 1
+  end
+  local distance = math.max(0, #chars - math.max(1, trailingChars))
   if distance == 0 then return 0 end
 
   -- The setting is pixels per second; convert it to character cells per second.
@@ -225,6 +276,37 @@ local function karaokeColor(charTime, charProgress, position, useGradient)
   return active .. "/" .. string.format("%.2f", math.max(0.72, alpha))
 end
 
+local function labelBaseline()
+  if fontStyle == "fixed" then return "textFixedHeight" end
+  if fontStyle == "ink_centered" then return "inkCentered" end
+  return "text"
+end
+
+local function secondaryText(line)
+  if not doubleLine or type(line) ~= "table" then return "" end
+  local translation = showTranslation and (line.translation or "") or ""
+  local romanization = showRomanization and (line.romanization or "") or ""
+  if secondaryLineMode == "translation" then return translation end
+  if secondaryLineMode == "romanization" then return romanization end
+  if secondaryLineMode == "romanization_first" then
+    return romanization ~= "" and romanization or translation
+  end
+  return translation ~= "" and translation or romanization
+end
+
+local function secondaryRowEnabled()
+  return doubleLine and (showTranslation or showRomanization)
+end
+
+local function compactMetrics(hasSecondary, vertical)
+  if not hasSecondary or vertical or not doubleLineAutoFit then return 1, lineGap end
+  local primaryBase = primaryFontSize > 0 and primaryFontSize or 13
+  local secondaryBase = secondaryFontSize > 0 and secondaryFontSize or 10
+  local naturalHeight = primaryBase * 1.25 + secondaryBase * 1.25 + lineGap
+  local scale = math.min(1, doubleLineHeightBudget / math.max(1, naturalHeight))
+  return scale, math.floor(lineGap * scale + 0.5)
+end
+
 local function buildLineRow(line, opts)
   opts = opts or {}
   local text = type(line) == "table" and line.text or line
@@ -233,16 +315,25 @@ local function buildLineRow(line, opts)
   local chars = toChars(text or "")
   if #chars == 0 then chars = { " " } end
 
-  local exactOffset = opts.marquee and getMarqueeOffset(#chars) or 0
+  local exactOffset = opts.marquee and getMarqueeOffset(chars) or 0
   local offset = math.floor(exactOffset)
   local fraction = exactOffset - offset
   local first = offset + 1
-  local last = math.min(#chars, first + maxChars)
+  local last = #chars
+  if opts.marquee then
+    local units = 0
+    last = first - 1
+    for sourceIndex = first, #chars do
+      units = units + charUnits(chars[sourceIndex])
+      last = sourceIndex
+      if units > maxChars then break end
+    end
+  end
   local labels = {}
 
   for sourceIndex = first, last do
     local active = playing and activeColor or inactiveColor
-    local color = opts.dim and inactiveColor or active
+    local color = opts.secondary and secondaryColor or (opts.dim and inactiveColor or active)
     if not opts.solid and not opts.dim then
       local progress = #chars > 1 and (sourceIndex - 1) / (#chars - 1) or 0
       color = karaokeColor(times and times[sourceIndex], progress, opts.position, opts.useGradient)
@@ -263,17 +354,24 @@ local function buildLineRow(line, opts)
       local wave = 0.55 + 0.45 * math.sin(waveProgress * math.pi * 2 - sourceIndex * 0.78)
       alpha = alpha * (wave * (1 - waveProgress) + waveProgress)
     end
+    if opts.typewriter then
+      local reveal = clamp((transitionElapsed - FADE_OUT_MS) / 520, 0, 1)
+      local threshold = (sourceIndex - first) / math.max(1, last - first + 1)
+      alpha = alpha * (reveal >= threshold and 1 or 0.08)
+    end
+    if opts.blink and transitionElapsed < FADE_OUT_MS + 540 then
+      local blink = math.floor(math.max(0, transitionElapsed - FADE_OUT_MS) / 90) % 2
+      alpha = alpha * (blink == 0 and 0.35 or 1)
+    end
 
     -- Bar labels elide glyphs when constrained below their natural width, so
     -- animate the viewport edges with opacity without clipping CJK characters.
     if opts.marquee and fraction > 0 then
       if sourceIndex == first then
         alpha = alpha * (1 - fraction)
-      elseif sourceIndex == first + maxChars then
+      elseif sourceIndex == last and sourceIndex > first then
         alpha = alpha * fraction
       end
-    elseif sourceIndex == first + maxChars then
-      alpha = 0
     end
 
     labels[#labels + 1] = ui.label({
@@ -282,12 +380,17 @@ local function buildLineRow(line, opts)
       color = color,
       opacity = alpha,
       maxLines = 1,
-      fontFamily = isCue and cueFontMode == "custom" and cueFontFamily or nil,
+      fontFamily = isCue and cueFontMode == "custom" and cueFontFamily or (fontFamily ~= "" and fontFamily or nil),
+      fontSize = opts.secondary and math.max(6, secondaryFontSize * (opts.fontScale or 1))
+        or ((primaryFontSize > 0 or (opts.fontScale or 1) < 1)
+          and math.max(6, (primaryFontSize > 0 and primaryFontSize or 13) * (opts.fontScale or 1)) or nil),
+      fontWeight = opts.secondary and "normal" or fontWeight,
+      baseline = labelBaseline(),
     })
   end
 
   if opts.marquee then
-    while #labels < maxChars + 1 do
+    while #labels < math.ceil(maxChars) + 1 do
       labels[#labels + 1] = ui.label({ text = " ", opacity = 0, maxLines = 1 })
     end
   end
@@ -305,6 +408,9 @@ local function currentTransitionLine(info)
   if animation == "none" or transitionElapsed >= FADE_OUT_MS then
     local opacity = animation == "none" and 1
       or easeOutCubic((transitionElapsed - FADE_OUT_MS) / FADE_IN_MS)
+    if animation == "pulse" and transitionElapsed < FADE_OUT_MS + 600 then
+      opacity = opacity * (0.76 + 0.24 * math.sin(math.max(0, transitionElapsed - FADE_OUT_MS) / 75))
+    end
     return info and info.line or nil, opacity
   end
   return outgoingLine, 1 - easeOutCubic(transitionElapsed / FADE_OUT_MS)
@@ -323,7 +429,11 @@ local function render()
   local prefix = {}
   local coverPath = showCover and cover and cover ~= "" and noctalia.fileExists(cover) and cover or nil
   if coverPath then
-    prefix[#prefix + 1] = ui.image({ path = coverPath, width = 18, height = 18, radius = 9, fit = "cover" })
+    local radius = coverShape == "circle" and coverSize / 2
+      or coverShape == "rounded" and math.min(5, coverSize / 2)
+      or coverShape == "square" and 0
+      or math.min(coverRadius, coverSize / 2)
+    prefix[#prefix + 1] = ui.image({ path = coverPath, width = coverSize, height = coverSize, radius = radius, fit = "cover" })
   else
     prefix[#prefix + 1] = ui.glyph({
       name = glyph,
@@ -333,7 +443,9 @@ local function render()
   end
 
   local lineNodes = {}
-  if showMode == "track" then
+  local renderLineGap = lineGap
+  local renderTextHeight = 0
+  if displayMode == "track" or showMode == "track" then
     local label = getTrackLabel()
     lineNodes[1] = buildLineRow(label, {
       key = "track",
@@ -345,17 +457,38 @@ local function render()
     if info then
       local shownLine, opacity = currentTransitionLine(info)
       if shownLine then
+        local showSecondaryRow = secondaryRowEnabled() and not shownLine.cue and not info.cue
+        local secondary = showSecondaryRow and secondaryText(shownLine) or ""
+        local fontScale, effectiveLineGap = compactMetrics(showSecondaryRow, vertical)
         lineNodes[#lineNodes + 1] = buildLineRow(shownLine, {
           key = "current-" .. tostring(info.index),
           marquee = shownLine == info.line and shouldMarquee(shownLine.text),
           position = position,
-          useGradient = shownLine == info.line and info.synced and useGradient,
-          solid = not info.synced or (animation ~= "karaoke" and animation ~= "cascade" and animation ~= "wave"),
+          useGradient = karaokeEnabled and shownLine == info.line and info.synced and useGradient,
+          solid = not karaokeEnabled or not info.synced or (animation ~= "karaoke" and animation ~= "cascade" and animation ~= "wave"),
           cascade = shownLine == info.line and animation == "cascade",
           wave = shownLine == info.line and animation == "wave",
+          typewriter = shownLine == info.line and animation == "typewriter",
+          blink = shownLine == info.line and animation == "blink",
           opacity = opacity,
           cue = shownLine == info.line and info.cue == true,
+          fontScale = fontScale,
+          compact = showSecondaryRow and not vertical and doubleLineAutoFit,
         })
+        if showSecondaryRow then
+          lineNodes[#lineNodes + 1] = buildLineRow({ text = secondary }, {
+            key = "secondary-" .. tostring(info.index),
+            marquee = secondary ~= "" and shouldMarquee(secondary),
+            solid = true,
+            dim = true,
+            secondary = true,
+            opacity = secondary ~= "" and math.min(0.82, opacity) or 0,
+            fontScale = fontScale,
+            compact = not vertical and doubleLineAutoFit,
+          })
+          renderLineGap = effectiveLineGap
+          if not vertical and doubleLineAutoFit then renderTextHeight = doubleLineHeightBudget end
+        end
       end
 
       if vertical and maxLines > 1 and shownLine == info.line then
@@ -382,20 +515,41 @@ local function render()
   if vertical then
     barWidget.render(ui.column({ gap = 3, align = "start", opacity = playing and 1 or 0.58 }, {
       ui.row({ gap = 6, align = "center" }, prefix),
-      ui.column({ gap = 2, align = "start" }, lineNodes),
+      ui.column({
+        gap = renderLineGap,
+        align = "start",
+        justify = renderTextHeight > 0 and "center" or nil,
+        height = renderTextHeight > 0 and renderTextHeight or nil,
+      }, lineNodes),
     }))
   else
     local children = {}
+    if paddingLeft > 0 then children[#children + 1] = ui.spacer({ width = paddingLeft }) end
     for _, node in ipairs(prefix) do children[#children + 1] = node end
-    children[#children + 1] = lineNodes[1]
+    children[#children + 1] = ui.column({
+      gap = renderLineGap,
+      align = "start",
+      justify = renderTextHeight > 0 and "center" or nil,
+      height = renderTextHeight > 0 and renderTextHeight or nil,
+    }, lineNodes)
+    if paddingRight > 0 then children[#children + 1] = ui.spacer({ width = paddingRight }) end
     barWidget.render(ui.row({ gap = 6, align = "center", opacity = playing and 1 or 0.58 }, children))
   end
 
-  barWidget.setTooltip(getTrackLabel())
+  local sourceNames = {
+    lrclib = "LRCLIB", netease = "NetEase", qqmusic = "QQ Music", kugou = "Kugou",
+    qishui = "Qishui", apple_music = "Apple Music", spotify = "Spotify",
+    musixmatch = "Musixmatch", mpris = "MPRIS", custom = "Custom", cache = "Cache",
+  }
+  local sourceLabel = noctalia.tr("source_label")
+  local tooltip = getTrackLabel()
+  if sourceUsed ~= "" then tooltip = tooltip .. "\n" .. sourceLabel .. ": " .. (sourceNames[sourceUsed] or sourceUsed) end
+  barWidget.setTooltip(tooltip)
   rendered = true
 end
 
 function onClick()
+  if displayMode ~= "toggle" then return end
   showMode = showMode == "auto" and "track" or "auto"
   marqueeElapsed = 0
   if rendered then render() end
@@ -425,6 +579,7 @@ function update()
   cover = noctalia.state.get("cover")
   playing = noctalia.state.get("playing") == true
   playerInstance = noctalia.state.get("player_instance") or ""
+  sourceUsed = noctalia.state.get("lyrics_source_used") or ""
 
   local info = getLineInfo()
   local nextKey = info and info.key or "fallback"
@@ -443,7 +598,10 @@ function update()
   if playing then
     transitionElapsed = transitionElapsed + delta * 1000
     local text = showMode == "track" and getTrackLabel() or (info and info.line.text or "")
-    if shouldMarquee(text) then marqueeElapsed = marqueeElapsed + delta end
+    local secondary = showMode ~= "track" and info and secondaryText(info.line) or ""
+    if shouldMarquee(text) or (secondary ~= "" and shouldMarquee(secondary)) then
+      marqueeElapsed = marqueeElapsed + delta
+    end
   end
 
   render()

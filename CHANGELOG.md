@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.4.0
+
+- Add English and Simplified Chinese localization following Noctalia's global
+  language, without exposing unsupported per-plugin language overrides.
+- Add translation and romanization lyric layers with double-line display,
+  independent visibility controls, and secondary-line priorities.
+- Add unified LRCLIB, NetEase, QQ Music, Kugou, Qishui, Apple Music, Spotify,
+  Musixmatch, MPRIS, custom HTTP, and external IPC source handling.
+- Add manually supplied Spotify, Apple Music, Musixmatch, and Qishui credentials
+  without automatic browser-cookie discovery or credential logging.
+- Add lyrics timing offset and configurable MPRIS polling interval.
+- Add cover shape, custom radius, and cover size controls.
+- Add track-only mode, per-character karaoke toggle, font family/size/weight,
+  secondary font size, supported baseline styles, line spacing, and side padding.
+- Add typewriter, pulse, and blink transitions alongside existing animations.
+- Cancel stale source callbacks when changing sources on the same track, and
+  show credential settings only for their selected source.
+- Add independent primary/secondary lyric font sizes and inter-line spacing.
+- Reorganize settings into a focused common view and a collapsed advanced view
+  for credentials, source ordering, polling, marquee metrics, and fine layout.
+
 ## 1.3.0
 
 - Add an option for intro/interlude characters to follow the interface font or
