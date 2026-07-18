@@ -75,7 +75,7 @@ local MARQUEE_HOLD = 1.1
 local BLEND_MS = 350
 local INTERLUDE_GAP_MS = 7000
 local INTRO_MIN_MS = 6000
-local INTERLUDE_MIN_MS = 8000
+local INTERLUDE_MIN_MS = 3000
 
 local function shellQuote(value)
   return "'" .. tostring(value):gsub("'", "'\\''") .. "'"
@@ -170,8 +170,13 @@ local function getLineInfo()
     lineEnd = math.min(nextTime, startTime + line.duration)
   elseif nextTime - startTime >= INTERLUDE_GAP_MS then
     -- LRC only marks line starts. Do not stretch a lyric across a long instrumental gap.
-    local estimatedDuration = clamp(#toChars(line.text) * 320, 3200, 6000)
-    lineEnd = math.min(nextTime, startTime + estimatedDuration)
+    local lastCharTime = line.chars and tonumber(line.chars[#line.chars]) or nil
+    if lastCharTime and lastCharTime >= startTime and lastCharTime < nextTime then
+      lineEnd = math.min(nextTime, lastCharTime + 600)
+    else
+      local estimatedDuration = clamp(#toChars(line.text) * 320, 3200, 6000)
+      lineEnd = math.min(nextTime, startTime + estimatedDuration)
+    end
   end
 
   -- Only show an interlude between two real lyric lines. The final lyric stays
