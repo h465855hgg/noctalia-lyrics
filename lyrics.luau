@@ -76,6 +76,7 @@ local BLEND_MS = 350
 local INTERLUDE_GAP_MS = 7000
 local INTRO_MIN_MS = 6000
 local INTERLUDE_MIN_MS = 5000
+local INTERLUDE_LEAD_MS = 1000
 
 local function shellQuote(value)
   return "'" .. tostring(value):gsub("'", "'\\''") .. "'"
@@ -181,12 +182,13 @@ local function getLineInfo()
 
   -- Only show an interlude between two real lyric lines. The final lyric stays
   -- visible through the outro instead of turning the whole song ending into dots.
-  if nextLine and nextTime - lineEnd >= INTERLUDE_MIN_MS and position >= lineEnd then
+  local interludeStart = math.max(startTime, lineEnd - INTERLUDE_LEAD_MS)
+  if nextLine and nextTime - lineEnd >= INTERLUDE_MIN_MS and position >= interludeStart then
     return {
       key = "interlude-" .. tostring(index),
       index = index,
       line = { text = cueText, cue = true },
-      progress = clamp((position - lineEnd) / (nextTime - lineEnd), 0, 1),
+      progress = clamp((position - interludeStart) / (nextTime - interludeStart), 0, 1),
       synced = true,
       position = position,
       cue = true,
