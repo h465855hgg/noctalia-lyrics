@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.1
+
+- Add an SPlayer preset that consumes SPlayer's complete current lyric data,
+  including line and word timing, translations, romanization, background lines,
+  and duet markers.
+- Preserve SPlayer word boundaries and expose character timing for karaoke
+  highlighting without tying the preset to a specific upstream music service.
+- Pass MPRIS track IDs and media URLs through the service for stable track
+  identity.
+- Detect pseudo word-timed lines whose inferred end time is stretched to the
+  next LRC timestamp, restoring instrumental-break cues without changing real
+  multi-word timing.
+
 ## 1.4.0
 
 - Add English and Simplified Chinese localization following Noctalia's global

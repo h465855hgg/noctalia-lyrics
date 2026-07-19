@@ -41,6 +41,7 @@
         "auto": "Automatic fallback",
         "lrclib": "LRCLIB",
         "netease": "NetEase Music",
+        "splayer": "SPlayer",
         "qqmusic": "QQ Music",
         "kugou": "Kugou Music",
         "qishui": "Qishui Music",
@@ -52,7 +53,7 @@
         "external": "External IPC push"
       }
     },
-    "lyrics_sources": { "label": "Automatic source order", "description": "Source IDs tried from top to bottom: lrclib, netease, qqmusic, kugou, qishui, apple_music, spotify, musixmatch, mpris, or custom." },
+    "lyrics_sources": { "label": "Automatic source order", "description": "Source IDs tried from top to bottom: lrclib, netease, splayer, qqmusic, kugou, qishui, apple_music, spotify, musixmatch, mpris, or custom." },
     "translation_language": {
       "label": "Translation language", "description": "Preferred translated-lyric language when supported by the source.",
       "options": { "zh-Hans": "Simplified Chinese", "zh-Hant": "Traditional Chinese", "en": "English", "ja": "Japanese", "ko": "Korean" }
@@ -63,6 +64,7 @@
     "apple_user_token": { "label": "Apple Music user token", "description": "Optional Music-User-Token for lyrics requiring a user subscription." },
     "apple_storefront": { "label": "Apple Music storefront", "description": "Apple Music storefront code, for example us, cn, jp, or hk." },
     "musixmatch_token": { "label": "Musixmatch user token", "description": "User token for the Musixmatch desktop subtitle endpoint." },
+    "splayer_api_url": { "label": "SPlayer API URL", "description": "SPlayer local service URL. Defaults to http://127.0.0.1:25884 and reads the complete lyrics currently loaded by SPlayer." },
     "qishui_api_url": { "label": "Qishui API URL", "description": "Endpoint template supporting {title}, {artist}, and {album}. Required because public Qishui endpoints vary." },
     "qishui_token": { "label": "Qishui token", "description": "Optional Bearer token sent only to the configured Qishui endpoint." },
     "custom_url": {
