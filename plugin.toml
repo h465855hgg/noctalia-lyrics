@@ -1,6 +1,6 @@
 id = "h465855hgg/lyrics"
 name = "Lyrics"
-version = "1.4.1"
+version = "1.4.2"
 plugin_api = 3
 author = "h465855hgg"
 license = "MIT"
@@ -63,8 +63,8 @@ label_key = "settings.translation_language.label"
 description_key = "settings.translation_language.description"
 default = "zh-Hans"
 options = [
-  { value = "zh-Hans", label_key = "settings.translation_language.options.zh-Hans" },
-  { value = "zh-Hant", label_key = "settings.translation_language.options.zh-Hant" },
+  { value = "zh-Hans", label_key = "settings.translation_language.options.zh-hans" },
+  { value = "zh-Hant", label_key = "settings.translation_language.options.zh-hant" },
   { value = "en", label_key = "settings.translation_language.options.en" },
   { value = "ja", label_key = "settings.translation_language.options.ja" },
   { value = "ko", label_key = "settings.translation_language.options.ko" },

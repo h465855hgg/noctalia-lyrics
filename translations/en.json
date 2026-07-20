@@ -56,7 +56,7 @@
     "lyrics_sources": { "label": "Automatic source order", "description": "Source IDs tried from top to bottom: lrclib, netease, splayer, qqmusic, kugou, qishui, apple_music, spotify, musixmatch, mpris, or custom." },
     "translation_language": {
       "label": "Translation language", "description": "Preferred translated-lyric language when supported by the source.",
-      "options": { "zh-Hans": "Simplified Chinese", "zh-Hant": "Traditional Chinese", "en": "English", "ja": "Japanese", "ko": "Korean" }
+      "options": { "zh-hans": "Simplified Chinese", "zh-hant": "Traditional Chinese", "en": "English", "ja": "Japanese", "ko": "Korean" }
     },
     "spotify_sp_dc": { "label": "Spotify sp_dc", "description": "Optional manually supplied Spotify web cookie. Stored as a normal plugin setting; never written to logs." },
     "spotify_access_token": { "label": "Spotify access token", "description": "Optional manually supplied Spotify access token. Takes priority over sp_dc." },

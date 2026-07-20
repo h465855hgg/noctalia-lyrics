@@ -5,3 +5,8 @@ __pycache__/
 .query_cache.tmp
 .krc_cache.tmp
 cover_*.jpg
+cover_*.png
+cover_*.webp
+cover_*.gif
+cover_*.bmp
+cover_*.img
