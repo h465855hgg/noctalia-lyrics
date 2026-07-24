@@ -16,6 +16,10 @@
     "glyph": {
       "label": "Glyph"
     },
+    "show_glyph": {
+      "label": "Show glyph",
+      "description": "Display the configured glyph when no album cover is available."
+    },
     "show_artist": {
       "label": "Show artist"
     },
