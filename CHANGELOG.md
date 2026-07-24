@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.3
+
+- Add an option to hide the fallback glyph when album artwork is unavailable.
+- Hide the glyph picker while fallback glyph display is disabled.
+- Add vertical mouse-wheel controls for switching to the next or previous track.
+
 ## 1.4.1
 
 - Add an SPlayer preset that consumes SPlayer's complete current lyric data,
