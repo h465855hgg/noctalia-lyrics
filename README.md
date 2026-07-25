@@ -1,4 +1,4 @@
-# Noctalia Lyrics 1.4.3
+# Noctalia Lyrics 1.4.4
 
 Synchronized lyrics for the Noctalia bar, with multiple MPRIS players,
 translation and romanization layers, configurable sources, karaoke highlighting,
@@ -9,7 +9,7 @@ album artwork, and layout controls.
 | Field | Value |
 | --- | --- |
 | ID | `h465855hgg/lyrics` |
-| Entries | Bar widget: `lyrics`; service: `service` |
+| Entries | Bar widget: `lyrics`; service: `service`; panel: `selector`; shortcut: `open_selector` |
 
 ## Requirements
 
@@ -26,6 +26,23 @@ Install these commands on `PATH`:
 Enable `h465855hgg/lyrics`, start its `service` entry, and add the `lyrics` bar
 widget. Left-click switches between lyrics and track information when
 `display_mode` is `toggle`; right-click pauses or resumes the selected player.
+
+## LRCLIB candidate selector
+
+When LRCLIB returns multiple results for a track, hover the lyrics widget for
+half a second to open the attached selector panel. Each entry shows the
+candidate ID, whether lyrics are synchronized, and a preview of the first line.
+Selecting a candidate applies those lyrics without changing the track.
+
+The selector can also be opened through the `open_selector` shortcut. The
+shortcut is bound to the `lyrics_selector_open` action and can be configured in
+Noctalia's keyboard shortcut settings.
+
+To open or close the panel from IPC:
+
+```sh
+noctalia msg panel-toggle h465855hgg/lyrics:selector
+```
 
 ## Screenshots
 
@@ -61,6 +78,7 @@ Run validation after every change:
 python3 tools/validate.py
 noctalia plugins lint .
 python3 -m py_compile lyric_sources.py krc_decode.py lrclib_lyric.py
+python3 -m unittest discover -v
 ```
 
 ## Lyrics model

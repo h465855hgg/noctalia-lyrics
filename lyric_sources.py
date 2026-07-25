@@ -73,64 +73,59 @@ def line(time=-1, duration=0, text="", translation="", romanization="", chars=No
 def splayer_transmitted_lines(data):
     if not isinstance(data, dict):
         return []
-    source_lines = data.get("yrcData") or data.get("lrcData") or []
-    if not isinstance(source_lines, list):
-        return []
-    result = []
-    for line_index, source_line in enumerate(source_lines):
-        if not isinstance(source_line, dict):
-            continue
-        start = number(source_line.get("startTime"), -1)
-        end = number(source_line.get("endTime"), start)
-        words = source_line.get("words") if isinstance(source_line.get("words"), list) else []
-        text_parts = []
-        roman_parts = []
-        chars = []
-        word_timings = []
-        for word in words:
-            if not isinstance(word, dict):
+
+    def parse_lines(source_lines):
+        if not isinstance(source_lines, list):
+            return []
+        result = []
+        for line_index, source_line in enumerate(source_lines):
+            if not isinstance(source_line, dict):
                 continue
-            text = html.unescape(str(word.get("word", ""))).replace("\ufeff", "")
-            if not text:
-                continue
-            word_start = number(word.get("startTime"), start)
-            word_end = number(word.get("endTime"), word_start)
-            text_parts.append(text)
-            roman_word = clean_text(word.get("romanWord"))
-            if roman_word:
-                roman_parts.append(roman_word)
-            for index in range(len(text)):
-                chars.append(word_start + index * max(0, word_end - word_start) // max(1, len(text)))
-            word_timings.append({
-                "text": text,
-                "start": word_start,
-                "end": word_end,
-                "romanization": roman_word,
-            })
-        text = "".join(text_parts)
-        if not clean_text(text):
-            text = source_line.get("text", source_line.get("lyric", ""))
-        item = line(
-            start,
-            max(0, end - start),
-            text,
-            source_line.get("translatedLyric", source_line.get("translation", "")),
-            source_line.get("romanLyric", source_line.get("romanization", "")) or " ".join(roman_parts),
-            chars,
-        )
-        item["words"] = word_timings
-        item["is_background"] = source_line.get("isBG") is True
-        item["is_duet"] = source_line.get("isDuet") is True
-        next_line = source_lines[line_index + 1] if line_index + 1 < len(source_lines) else None
-        next_start = number(next_line.get("startTime"), -1) if isinstance(next_line, dict) else -1
-        if len(word_timings) == 1 and end - start >= 7000 and abs(next_start - end) <= 50:
-            word = word_timings[0]
-            if abs(word["start"] - start) <= 50 and abs(word["end"] - end) <= 50:
-                item["duration_inferred"] = True
-                item["chars"] = []
-        if item["text"] or item["translation"] or item["romanization"]:
-            result.append(item)
-    return finalize(result, number(data.get("duration"), 0))
+            start = number(source_line.get("startTime"), -1)
+            end = number(source_line.get("endTime"), start)
+            words = source_line.get("words") if isinstance(source_line.get("words"), list) else []
+            text_parts, roman_parts, chars, word_timings = [], [], [], []
+            for word in words:
+                if not isinstance(word, dict):
+                    continue
+                text = html.unescape(str(word.get("word", ""))).replace("\ufeff", "")
+                if not text:
+                    continue
+                word_start = number(word.get("startTime"), start)
+                word_end = number(word.get("endTime"), word_start)
+                text_parts.append(text)
+                roman_word = clean_text(word.get("romanWord", word.get("romanization", "")))
+                if roman_word:
+                    roman_parts.append(roman_word)
+                chars.extend(word_start + index * max(0, word_end - word_start) // max(1, len(text))
+                             for index in range(len(text)))
+                word_timings.append({"text": text, "start": word_start, "end": word_end,
+                                     "romanization": roman_word})
+            text = "".join(text_parts) or source_line.get("text", source_line.get("lyric", ""))
+            item = line(start, max(0, end - start), text,
+                        source_line.get("translatedLyric", source_line.get("translation", "")),
+                        source_line.get("romanLyric", source_line.get("romanization", ""))
+                        or " ".join(roman_parts), chars)
+            item["words"] = word_timings
+            item["is_background"] = source_line.get(
+                "isBG", source_line.get("isBg", source_line.get("isBackground"))) is True
+            item["is_duet"] = source_line.get("isDuet") is True
+            next_line = source_lines[line_index + 1] if line_index + 1 < len(source_lines) else None
+            next_start = number(next_line.get("startTime"), -1) if isinstance(next_line, dict) else -1
+            if len(word_timings) == 1 and end - start >= 7000 and abs(next_start - end) <= 50:
+                word = word_timings[0]
+                if abs(word["start"] - start) <= 50 and abs(word["end"] - end) <= 50:
+                    item["duration_inferred"] = True
+                    item["chars"] = []
+            if item["text"] or item["translation"] or item["romanization"]:
+                result.append(item)
+        return finalize(result, number(data.get("duration"), 0))
+
+    for key in ("yrcData", "lrcData"):
+        parsed = parse_lines(data.get(key))
+        if parsed:
+            return parsed
+    return []
 
 
 def finalize(lines, total_duration=0):
@@ -428,8 +423,8 @@ def request_data(url, headers=None, data=None, method=None, timeout=15):
         return response.read(), response.headers.get_content_charset() or "utf-8"
 
 
-def request_json(url, headers=None, data=None, method=None):
-    body, charset = request_data(url, headers, data, method)
+def request_json(url, headers=None, data=None, method=None, timeout=15):
+    body, charset = request_data(url, headers, data, method, timeout)
     text = body.decode(charset, "replace").strip()
     if text.startswith("callback(") and text.endswith(")"):
         text = text[9:-1]
@@ -464,6 +459,85 @@ def best_match(items, track, title_key, artist_key, album_key=None):
         if score > best_score:
             best, best_score = item, score
     return best if best_score >= 3 else None
+
+
+def lrclib_candidates(items, track):
+    wanted_title, wanted_artist, wanted_album = map(normalize, (
+        track.get("title"), track.get("artist"), track.get("album")
+    ))
+    wanted_duration = duration_ms(track.get("duration")) / 1000
+    ranked = []
+    seen_ids = set()
+    for index, item in enumerate(items if isinstance(items, list) else []):
+        if not isinstance(item, dict):
+            continue
+        candidate_id = clean_text(item.get("id"))
+        if not candidate_id or candidate_id in seen_ids:
+            continue
+        synced = bool(clean_text(item.get("syncedLyrics")))
+        plain = bool(clean_text(item.get("plainLyrics")))
+        if not synced and not plain:
+            continue
+
+        title = normalize(item.get("trackName"))
+        artist = normalize(item.get("artistName"))
+        album = normalize(item.get("albumName"))
+        if wanted_title and not title:
+            continue
+        identity_score = 0
+        if wanted_title and title:
+            title_score = 6 if title == wanted_title else 3 if wanted_title in title or title in wanted_title else 0
+            if title_score == 0:
+                continue
+            identity_score += title_score
+        if wanted_artist and artist:
+            artist_score = 4 if artist == wanted_artist else 2 if wanted_artist in artist or artist in wanted_artist else 0
+            if artist_score == 0:
+                continue
+            identity_score += artist_score
+        if wanted_album and album:
+            identity_score += 2 if album == wanted_album else 1 if wanted_album in album or album in wanted_album else 0
+
+        candidate_duration = number(item.get("duration"), 0)
+        duration_bucket = 5
+        duration_difference = float("inf")
+        if wanted_duration > 0 and candidate_duration > 0:
+            duration_difference = abs(wanted_duration - candidate_duration)
+            if duration_difference <= 2:
+                duration_bucket = 0
+            elif duration_difference <= 5:
+                duration_bucket = 1
+            elif duration_difference <= 10:
+                duration_bucket = 2
+            elif duration_difference <= 20:
+                duration_bucket = 3
+            else:
+                duration_bucket = 4
+
+        if identity_score >= 3:
+            seen_ids.add(candidate_id)
+            ranked.append((
+                -identity_score,
+                duration_bucket,
+                -int(synced),
+                duration_difference,
+                index,
+                item,
+            ))
+
+    ranked.sort(key=lambda entry: entry[:-1])
+    return [entry[-1] for entry in ranked]
+
+
+def lrclib_candidate_metadata(item):
+    return {
+        "id": clean_text(item.get("id")),
+        "track_name": clean_text(item.get("trackName")),
+        "artist_name": clean_text(item.get("artistName")),
+        "album_name": clean_text(item.get("albumName")),
+        "duration": max(0, number(item.get("duration"), 0)),
+        "synced": bool(clean_text(item.get("syncedLyrics"))),
+    }
 
 
 def first_cover(*values):
@@ -534,15 +608,24 @@ def adapter_lrclib(track, credentials, options):
     if track.get("album"):
         params["album_name"] = track["album"]
     data = request_json(query_url("https://lrclib.net/api/search", params))
-    best = best_match(data, track, lambda x: x.get("trackName", ""), lambda x: x.get("artistName", ""),
-                      lambda x: x.get("albumName", ""))
+    matches = lrclib_candidates(data, track)
+    requested_id = clean_text(options.get("lyrics_candidate_id"))
+    best = next((item for item in matches if clean_text(item.get("id")) == requested_id), None)
+    if requested_id and best is None:
+        return empty(source, "lrclib: requested match unavailable")
+    if best is None and matches:
+        best = matches[0]
     if not best:
         return empty(source, "lrclib: no match")
     lyrics = best.get("syncedLyrics") or best.get("plainLyrics") or ""
-    return success(
+    response = success(
         source, parse_lrc(lyrics) or parse_plain(lyrics), ["lrclib: match"],
         duration_ms(track.get("duration")), itunes_cover(track),
     )
+    if response.get("type") == "lyrics":
+        response["candidates"] = [lrclib_candidate_metadata(item) for item in matches]
+        response["selected_candidate_id"] = clean_text(best.get("id"))
+    return response
 
 
 def adapter_netease(track, credentials, options):
@@ -625,13 +708,22 @@ def adapter_splayer(track, credentials, options):
     expected_duration = duration_ms(track.get("duration"))
     song_info_endpoint = base_url.rstrip("/") + "/api/control/song-info"
     last_state = "unavailable"
-    for attempt in range(12):
+    for attempt in range(3):
         try:
-            response = request_json(song_info_endpoint)
+            response = request_json(song_info_endpoint, timeout=1)
             current = response.get("data", {}) if isinstance(response, dict) else {}
             current_title = current.get("name", current.get("playName", ""))
-            current_artist = current.get("artistName", current.get("artists", ""))
-            title_matches = normalize(current_title) == normalize(title)
+            current_artist = current.get("artistName", current.get("artist", current.get("artists", "")))
+            if isinstance(current_artist, list):
+                current_artist = " ".join(
+                    clean_text(item.get("name", item) if isinstance(item, dict) else item)
+                    for item in current_artist
+                )
+            wanted_title = normalize(title)
+            normalized_title = normalize(current_title)
+            title_matches = normalized_title == wanted_title or (
+                bool(normalized_title) and (normalized_title in wanted_title or wanted_title in normalized_title)
+            )
             artist_matches = not artist or not current_artist or (
                 normalize(artist) in normalize(current_artist) or normalize(current_artist) in normalize(artist)
             )
@@ -649,7 +741,7 @@ def adapter_splayer(track, credentials, options):
                 last_state = "track not ready"
         except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError):
             last_state = "API unavailable"
-        if attempt < 11:
+        if attempt < 2:
             time.sleep(0.4)
     return empty(source, "splayer: " + last_state)
 

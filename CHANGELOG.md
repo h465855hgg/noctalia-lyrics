@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.4
+
+- Rank LRCLIB results by identity, duration, and synchronized lyric availability.
+- Expose returned LRCLIB matches in an attached selector panel.
+- Apply a selected result without changing the current track.
+- Open the selector after a brief widget hover or through a configurable shortcut.
+- Bind candidate state and requests to the current track to prevent stale cross-track updates.
+- Remove the `show_lyrics_selector` setting; the selector is always available.
+- Add `panel` and `shortcut` entries for the selector.
+
 ## 1.4.3
 
 - Add an option to hide the fallback glyph when album artwork is unavailable.
